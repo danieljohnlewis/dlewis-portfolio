@@ -1,0 +1,59 @@
+-- Virtuoso dump graphs, more details here: http://virtuoso.openlinksw.com/dataspace/dav/wiki/Main/VirtDumpLoadRdfGraphs
+
+create procedure dump_graphs (in dir varchar := 'dumps', in file_length_limit integer := 1000000000)
+{
+  declare inx int;
+  inx := 1;
+  set isolation = 'uncommitted';
+  for (select * from (sparql define input:storage "" select distinct ?g { graph ?g { ?s ?p ?o } . filter ( ?g != virtrdf: ) } ) as sub option (loop)) do
+	{
+	  dump_one_graph ("g", sprintf ('%s/graph%06d_', dir, inx), file_length_limit);
+	  inx := inx + 1;
+	}
+}
+;
+
+create procedure dump_one_graph (in srcgraph varchar, in out_file varchar, in file_length_limit integer := 1000000000)
+{
+  declare file_name varchar;
+  declare env, ses any;
+  declare ses_len, max_ses_len, file_len, file_idx integer;
+  set isolation = 'uncommitted';
+  max_ses_len := 10000000;
+  file_len := 0;
+  file_idx := 1;
+  file_name := sprintf ('%s%06d.ttl', out_file, file_idx);
+  string_to_file (file_name || '.graph', srcgraph, -2);
+  string_to_file (file_name, sprintf ('# Dump of graph <%s>, as of %s\n', srcgraph, cast (now() as varchar)), -2);
+  --env := vector (dict_new (16000), 0, '', '', '', 0, 0);
+  env := vector (dict_new (16000), 0, '', '', '', 0, 0, 0, 0);
+  ses := string_output ();
+  for (select * from (sparql define input:storage "" select ?s ?p ?o { graph `iri(?:srcgraph)` { ?s ?p ?o } } ) as sub option (loop)) do
+	{
+	  http_ttl_triple (env, "s", "p", "o", ses);
+	  ses_len := length (ses);
+	  if (ses_len > max_ses_len)
+	    {
+	      file_len := file_len + ses_len;
+	      if (file_len > file_length_limit)
+	        {
+	          http (' .\n', ses);
+	          string_to_file (file_name, ses, -1);
+	          file_len := 0;
+	          file_idx := file_idx + 1;
+	          file_name := sprintf ('%s%06d.ttl', out_file, file_idx);
+	          string_to_file (file_name, sprintf ('# Dump of graph <%s>, as of %s (part %d)\n', srcgraph, cast (now() as varchar), file_idx), -2);
+	          env := vector (dict_new (16000), 0, '', '', '', 0, 0);
+	        }
+	      else
+	        string_to_file (file_name, ses, -1);
+	      ses := string_output ();
+	    }
+	}
+  if (length (ses))
+	{
+	  http (' .\n', ses);
+	  string_to_file (file_name, ses, -1);
+	}
+}
+;

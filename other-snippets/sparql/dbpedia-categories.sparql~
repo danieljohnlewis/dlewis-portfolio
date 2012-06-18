@@ -1,0 +1,8 @@
+SELECT DISTINCT ?uri, ?label, ?WikipediaURI
+WHERE {
+    ?uri dcterms:subject category:Latin_words_and_phrases ;
+        rdfs:label ?label ;
+        foaf:page ?WikipediaURI .
+    FILTER (lang(?label) = "en")
+}
+ORDER BY ?label

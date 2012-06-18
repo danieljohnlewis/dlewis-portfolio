@@ -1,0 +1,156 @@
+'''
+Created on 24 Mar 2011
+Last Updated on 28 Mar 2011
+PARTIAL CODE REMOVAL 18th June 2012 - removed commercial-sensitive code to put in dlewis-portfolio
+
+@author: Daniel Lewis <daniel@vanirsystems.com>
+'''
+from urlparse import urlparse
+from urlparse import urldefrag
+from urlparse import urlsplit
+from datetime import datetime
+import socket
+import urllib2
+''' CODE REMOVED '''
+import logging, re
+class Uri():
+    
+    def __init__(self, links, plinks):
+        self.links = links
+        self.plinks = plinks
+    
+    # function: check valid
+    def validate(self, uri):
+        response = Client(uri)
+        response.head()
+        return (response.geturl(), response.info().gettype(), response.info().getsubtype())
+    
+    # function: check if uri is in the database
+    def is_present(self, uri):
+        ''' CODE REMOVED '''
+        
+    # function: grabs the longuri from the database based on a shorturi
+    def db_longifier(self, shorturi):
+        ''' CODE REMOVED '''
+    
+    # function: grabs a longuri from the internet by sending a get head request
+    def net_longifier(self, shorturi):
+        response = Client(shorturi)
+        response.head()
+        return urldefrag(response.geturl())[0]
+    
+    # function: returns true if the longuri is in the collection
+    def longuri_ispresent(self, longuri):
+        ''' CODE REMOVED '''
+        
+        
+    # function: save a uri with an upsert
+    def save(self, data = {}):
+        ''' CODE REMOVED '''  
+    
+    # function: appends a shorturi to a longuri link
+    def append_shorturi(self, link, shorturi):
+        self.links.update({"uri": link} , {"$addToSet" : {"aliases" : shorturi}})
+
+    # function: fetches a uri, first checking the database, and if not found then checking the net (uses aspects for probing)
+    def fetch_uri(self, link):
+        link, type, subtype = self.validate(link)
+        longlink = self.db_longifier(link)
+        if not longlink:
+            longlink = self.net_longifier(link)
+        return (longlink, type, subtype)
+    
+    # function: Sets a flag against the link indicating a 40* problem - including an error message
+    # @TODO: not sure if it would be worth getting rid of the true/false update on the links table
+    def four_zero_star_set(self, link, errmsg = ""):
+        self.links.update({"uri": link} , {"$set": {"40star" : "true"}})
+        self.plinks.update({"uri": link}, {"$set": {"error": errmsg}}, True) # UPSERT in plink
+    
+    # function: Unsets any flag against a link indicating a 40* problem
+    # @TODO: not sure if it would be worth getting rid of the true/false update on the links table
+    def four_zero_star_unset(self, link):
+        self.links.update({"uri": link} , {"$set": {"40star" : "true"}})
+        self.plinks.remove({"uri": link})
+        
+    def filter(self, data, content):
+        """
+        Hook where filters (processors) can do their pre and postprocessing
+        
+        Filters take care of title, description and other metadata to be extracted
+        """
+        return data
+    
+    def get(self, link, force = False):
+        """
+        Get a url from the store, set aliases if necessary
+        """
+        
+        try:
+            longlink, type, subtype = self.fetch_uri(link)
+            if not longlink:
+                raise Exception()
+            else:
+                self.four_zero_star_unset(link)
+        except Exception as inst:
+            if(re.search("code 40", str(inst))):
+                self.four_zero_star_set(link, str(inst))
+            longlink = link
+            type = "ERROR"
+            subtype = "ERROR"
+
+        # prepare data
+        data = {
+            'uri' : longlink,
+            'aliases' : [longlink],
+            'created' : datetime.now(),
+            'type' : type,
+#            'domain' : Source().get_domain(final), # @TODO
+            'annotations' : None
+        }
+        
+        # were there redirects?
+        if longlink != link:
+            data['aliases'].append(link)
+        
+        # only get text/html, though save filters may still process other types of data
+        content = None
+        if subtype == 'html':
+            try:
+                content = Client(longlink).read()
+                content = Cleaner.clean(content)
+            except Exception as exception:                
+                raise exception
+
+        # run it through the processing filters
+        try:
+            filtered_data = self.filter(data, content)
+        except Exception as exception:
+            logging.info("Processing filters problem: " + str(exception))
+            raise exception
+
+        # possibly a canonical link was found by a filter
+        if data['uri'] != filtered_data['uri']:
+            try:
+                link,ltype,lsubtype  = self.db_longifier(filtered_data['uri'])
+                
+                if link:
+                    self.append_shorturi(filtered_data["uri"], data["uri"])
+                    return link
+            except:
+                pass
+        
+        return self.save(filtered_data)
+    
+class HeadRequest(urllib2.Request):
+    """
+    HEAD request wrapper, usage:
+    
+    response = urllib2.urlopen(HeadRequest(link))
+    """
+    def get_method(self):
+        return "HEAD"
+
+class InvalidUrlError(Exception):
+    """
+    Invalid url exception
+    """

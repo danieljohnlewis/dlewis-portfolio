@@ -1,0 +1,75 @@
+------------------------------------------------------------------------------------------
+The Big Idea
+------------------------------------------------------------------------------------------
+What has been the shift of the political stance in the UK?
+
+------------------------------------------------------------------------------------------
+Data Acquisition
+------------------------------------------------------------------------------------------
+SPARQL Query to get (messy) data from DBPEDIA:
+
+SELECT DISTINCT ?pmuri ?pm ?partyname ?partynameenglish ?electiondate ?position
+where
+  { 
+  ?election dbpedia-owl:firstLeader ?pmuri .
+  ?election dbpedia-owl:startDate ?electiondate .
+  ?pmuri dbpprop:title dbpedia:Prime_Minister_of_the_United_Kingdom .
+  ?pmuri dbpedia-owl:party ?partyurl . 
+  ?pmuri dbpprop:name ?pm . 
+  FILTER ( lang(?pm) = "en" ) .
+  OPTIONAL {
+     ?partyurl dbpprop:name ?partyname .
+     FILTER ( lang(?partyname) = "en" ) .
+  } .
+  OPTIONAL {
+     ?partyurl dbpprop:nameEnglish ?partynameenglish .
+     FILTER ( lang(?partynameenglish) = "en" )
+  }
+  ?partyurl dbpprop:position ?position
+ }
+ORDER BY ?electiondate
+
+------------------------------------------------------------------------------------------
+Data Cleaning Pt 1
+------------------------------------------------------------------------------------------
+Have put it in a Google Spreadsheet to clean it up a bit:
+* HTML Link: https://docs.google.com/spreadsheet/pub?key=0AkXKM3uHb4ahdG55S1hkUEpwYi1KaE1lRjI5V3drNnc&single=true&gid=0&output=html
+* CSV Link: https://docs.google.com/spreadsheet/pub?key=0AkXKM3uHb4ahdG55S1hkUEpwYi1KaE1lRjI5V3drNnc&single=true&gid=0&output=csv
+
+
+Have placed it on The Data Hub: http://thedatahub.org/dataset/uk-political-shift
+
+
+------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------
+matplotlib stuff
+Idea: Plug data into MatPlotLib for dynamic generation of shift analysis
+------------------------------------------------------------------------------------------
+
+On Linux command line run:
+ipython -pylab
+
+Then we can run:
+
+import csv
+import urllib2, urllib
+import time
+
+url = 'https://docs.google.com/spreadsheet/pub?key=0AkXKM3uHb4ahdG55S1hkUEpwYi1KaE1lRjI5V3drNnc&single=true&gid=0&output=csv'
+
+request = urllib2.Request(url=url)
+response = urllib2.urlopen(request)
+
+reader = csv.reader(response)
+
+x = []
+y = []
+for row in reader:
+    if(row[2] != 'Election Date'):
+        datex = time.strptime(row[2], "%d/%m/%Y") ''' @TODO AN ERROR OCCURS HERE, FIX IT '''
+        x.append(datex)
+        y.append(row[1])
+    
+plot_date(x, y, fmt='bo', tz=None, xdate=True, ydate=False)
+
+''' NOT QUITE THE RIGHT CODE FOR VISUALISATION YET, VERY MUCH A Work-In-Progress '''

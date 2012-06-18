@@ -1,0 +1,11 @@
+# From http://vanirsystems.com/blog/2011/07/07/linked-data-spreadsheet-pt2/
+
+SELECT DISTINCT ?TouchesAreaURI, ?TouchesName, ?TouchesAreaLat, ?TouchesAreaLong
+WHERE {
+<http://data.ordnancesurvey.co.uk/id/7000000000000770>  <http://data.ordnancesurvey.co.uk/ontology/spatialrelations/touches>  ?TouchesAreaURI .
+GRAPH ?TouchesAreaURI {
+?TouchesAreaURI <http://www.w3.org/2000/01/rdf-schema#label> ?TouchesName;
+<http://www.w3.org/2003/01/geo/wgs84_pos#lat> ?TouchesAreaLat;
+<http://www.w3.org/2003/01/geo/wgs84_pos#long> ?TouchesAreaLong
+}
+}

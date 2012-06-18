@@ -1,0 +1,1 @@
+sed 's/.*&lt;//g' filename.txt &gt; filename.done.txt
