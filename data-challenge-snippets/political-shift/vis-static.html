@@ -1,0 +1,266 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>UK Voting Proportions since 1832</title>
+        <script src="http://raphaeljs.com/raphael.js"></script>
+        <script src="http://g.raphaeljs.com/g.raphael.js"></script>
+        <script src="http://g.raphaeljs.com/g.line.js"></script>
+        <script>
+            window.onload = function () {
+                var r = Raphael("vote-hold"),
+                    txtattr = { font: "16px sans-serif" };
+                
+                var x = [], y = [], y2 = [], y3 = [];
+				
+				var x = [2010
+,2005
+,2001
+,1997
+,1992
+,1987
+,1983
+,1979
+,1974
+,1970
+,1966
+,1964
+,1957
+,1955
+,1951
+,1950
+,1945
+,1935
+,1931
+,1929
+,1924
+,1923
+,1922
+,1918
+,1910
+,1910
+,1906
+,1900
+,1895
+,1892
+,1886
+,1885
+,1880
+,1874
+,1868
+,1865
+,1859
+,1857
+,1852
+,1847
+,1841
+,1837
+,1835
+,1832];
+
+                tory = [10703654
+,8784915
+,8357615
+,9600943
+,14093007
+,13760935
+,13012316
+,13697923
+,10462565
+,13145123
+,11418455
+,12002642
+,13750875
+,13310891
+,13717850
+,11507061
+,8716211
+,10025083
+,11377022
+,8252527
+,7418983
+,5286159
+,5294465
+,3472738
+,2270753
+,2919236
+,2278076
+,1767958
+,1894772
+,2159150
+,1520886
+,2020927
+,1426351
+,1091708
+,903318
+,346035
+,193232
+,239712
+,311481
+,205481
+,306314
+,379694
+,261269 
+,241284];
+
+			var lib = [6836248
+,5985454
+,4814321
+,5242947
+,5999384
+,7341651
+,7780949
+,4313804
+,5346704
+,2117035
+,2327457
+,3099283
+,1640760
+,722402
+,730546
+,2621487
+,2177938
+,1414010
+,1346571
+,5104638
+,2818717
+,4129922
+,2601486
+,1355398
+,2157256
+,2712511
+,2565644
+,1572323
+,1765266
+,2088019
+,1244683
+,2199198
+,1836423
+,1281159
+,1428776
+,508821
+,372117
+,464127
+,430882
+,259311
+,273902
+,418331
+,349868
+,554719];
+
+			var lab = [8606517
+,9552436
+,10724953
+,13518167
+,11560484
+,10029270
+,8456934
+,11532218
+,11457079
+,12208758
+,13096629
+,12205808
+,12216172
+,12405254
+,13948385
+,13226176
+,11967746
+,7984988
+,6081826
+,8048968
+,5281626
+,4267831
+,4076665
+,2171230
+,309963
+,435770
+,254202
+,62698
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0
+,0];
+
+			var totals = [27902235
+,25398287
+,24514743
+,28610508
+,31899680
+,31222162
+,29304498
+,29583863
+,27268344
+,27470916
+,26842541
+,27307733
+,27607807
+,26438547
+,28396781
+,27354724
+,22861895
+,19424081
+,19883865
+,21406133
+,15519326
+,13683912
+,13327982
+,6999366
+,4737972
+,6067517
+,5097922
+,3402979
+,3660038
+,4247169
+,2765569
+,4220125
+,3262774
+,2372867
+,2332094
+,854856
+,565349
+,703839
+,743904
+,467640
+,580908
+,798025
+,611137
+,796003];
+
+			for(index in totals) {
+				tory[index] = (tory[index]/totals[index]);
+				lib[index] = (lib[index]/totals[index]);
+				lab[index] = (lab[index]/totals[index]);
+			}
+
+				
+                // r.text(100, 10, "UK Voting Proportions since 1832").attr(txtattr);
+
+               r.linechart(0, 10, 600, 300, x, [tory, lib, lab], { shade: true, "colors":["#0000FF", "#FDBB30", "#FF0000"], axis: "0 0 1 0" });
+            };
+        </script>
+    </head>
+    <body>
+		<h1>UK Voting Proportions since 1932</h1>
+		<p>Very Quickly Developed by Daniel Lewis in June 2012</p>
+        <div id="vote-hold"></div>
+		<div class="legend" style="width: 600px; margin-top: 30px;">
+			<div style="background-color: #0000FF; color: #FFFFFF">Tory/Conservative</div>
+			<div style="background-color: #FDBB30; color: #000000">Whig/Liberal/Liberal Democrat</div>
+			<div style="background-color: #FF0000; color: #FFFFFF">Labour</div>
+		</div>
+		<p style="width:600px">
+		Please note that this example is using static data (i.e. it is copy-paste jobby from <a href="https://docs.google.com/spreadsheet/pub?key=0AkXKM3uHb4ahdGo1ckRiUVZvbEItTmNrOHhYdjNSbXc&output=html">from a Google Spreadsheet</a>) and is not dynamic. Its also not the most elegant code (and I would normally improve on it). It is also missing other parties at the moment. However, it is a step towards something quite interesting.
+		</p>
+    </body>
+</html>
